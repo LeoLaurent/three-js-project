@@ -49,6 +49,9 @@ function init() {
     cube.castShadow = true;
     scene.add(cube);
 
+    const ambientLight = new THREE.AmbientLight( 0xcccccc );
+    scene.add( ambientLight );
+
     const light = new THREE.DirectionalLight(0xffffff, 1, 100)
     light.position.set(-2, -2, 5);
     light.castShadow = true;
