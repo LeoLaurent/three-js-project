@@ -18,6 +18,7 @@ const direction = new THREE.Vector3();
 const vertex = new THREE.Vector3();
 const color = new THREE.Color();
 
+
 init();
 animate();
 
@@ -47,7 +48,8 @@ function init() {
     const texturenormal = textureloader.load('img/Concrete_Blocks_011_normal.jpg')
     const textureroughness = textureloader.load('img/Concrete_Blocks_011_roughness.jpg')
 
-    const cube_geometry = new THREE.BoxGeometry(5, 5, 5, 512, 512)
+
+    const cube_geometry = new THREE.BoxGeometry(20, 20, 20, 256, 256)
     const cube_material = new THREE.MeshStandardMaterial(
         {
             map: textureBasecolor,
@@ -59,10 +61,27 @@ function init() {
         }
     );
 
+    for ( let i = 0; i < 20; i ++ ) {
+
+        const cubei = new THREE.Mesh( cube_geometry, cube_material );
+        cubei.position.x = Math.floor( Math.random() * 10 - 5 ) * 20;
+        cubei.position.y = Math.floor( Math.random() * 4 ) * 20 + 10;
+        cubei.position.z = Math.floor( Math.random() * 20 - 5 ) * 10;
+        cubei.castShadow = true;
+        cubei.receiveShadow = true;
+
+        scene.add( cubei );
+        objects.push( cubei );
+
+    };
+
     const cube = new THREE.Mesh(cube_geometry, cube_material);
-    cube.position.set(0, 0, 1);
+    cube.position.set(0, 0, 0);
     cube.castShadow = true;
+    cube.receiveShadow = true;
     scene.add(cube);
+    renderer.shadowMapSoft = true;
+    
     controls = new PointerLockControls( camera ,  document.body );
 
     document.body.addEventListener( 'click', function () {
@@ -70,13 +89,18 @@ function init() {
         controls.lock();
     }, false );
 
+
     scene.add( controls.getObject() );
-    const light = new THREE.DirectionalLight(0xffffff, 1, 100)
-    light.position.set(0 , 2, 5);
+    const light = new THREE.DirectionalLight(0xffffff, 1)
+    light.position.set(0 , 50, 50);
+
+    light.shadow.camera =  new THREE.OrthographicCamera( -100, 100, 100, -100, 0.5, 1000 );
     light.castShadow = true;
-    light.shadowMapWidth = 1024; 
-    light.shadowMapHeight = 1024; 
+    light.shadow.mapSize.width = 100000; 
+    light.shadow.mapSize.height = 100000; 
+    light.shadow.radius=0.8
     scene.add(light);
+
 
     // Definition des controles
     const onKeyDown = function ( event ) {
@@ -149,7 +173,6 @@ function onWindowResize() {
     camera.updateProjectionMatrix();
 
     renderer.setSize( window.innerWidth, window.innerHeight );
-
 }
 
 
@@ -170,8 +193,8 @@ function onWindowResize() {
     
             const delta = ( time - prevTime ) / 1000;
     
-            velocity.x -= velocity.x * 2.0 * delta;
-            velocity.z -= velocity.z * 2.0 * delta;
+            velocity.x -= velocity.x * 10.0 * delta;
+            velocity.z -= velocity.z * 10.0 * delta;
     
             velocity.y -= 9.8 * 70.0 * delta; // 100.0 = mass
     
