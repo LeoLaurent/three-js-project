@@ -1,3 +1,5 @@
+import './style.css';
+
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
 let camera, scene, renderer, controls;
@@ -27,11 +29,7 @@ function init() {
     scene.background = new THREE.Color(0x87CEFA)
     camera = new THREE.PerspectiveCamera(110, window.innerWidth / window.innerHeight, 1, 1000);
     camera.position.y = 10
-    const color = 0x87CEFA;  // white
-    const near = 1;
-    const far = 200;
-    const density = 0.1;
-    scene.fog = new THREE.Fog(color, near, far);
+    scene.fog = new THREE.Fog(0x87CEFA, 1, 200);
   
     renderer = new THREE.WebGLRenderer({antialias: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -83,7 +81,7 @@ function init() {
     const textureAmbientOcclussion = textureloader.load('img/Concrete_Blocks_011_roughness.jpg')
 
 
-    const cube_geometry = new THREE.BoxGeometry(10, 10, 10, 512/2, 512/2)
+    const cube_geometry = new THREE.BoxGeometry(10, 10, 10, 512/4, 512/4)
     const cube_material = new THREE.MeshStandardMaterial(
         {
             map: textureBasecolor,
@@ -206,62 +204,62 @@ function onWindowResize() {
 }
 
 
-    function animate() {
+function animate() {
 
-        requestAnimationFrame( animate );
-    
-        const time = performance.now();
-    
-        if ( controls.isLocked === true ) {
-    
-            raycaster.ray.origin.copy( controls.getObject().position );
-            raycaster.ray.origin.y -= 10;
-    
-            const intersections = raycaster.intersectObjects( objects, false );
-    
-            const onObject = intersections.length > 0;
-    
-            const delta = ( time - prevTime ) / 1000;
-    
-            velocity.x -= velocity.x * 10.0 * delta;
-            velocity.z -= velocity.z * 10.0 * delta;
-    
-            velocity.y -= 6* 100.0 * delta; // 100.0 = mass
-    
-            direction.z = Number( moveForward ) - Number( moveBackward );
-            direction.x = Number( moveRight ) - Number( moveLeft );
-            direction.normalize(); // this ensures consistent movements in all directions
-    
-            if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
-            if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
-    
-            if ( onObject === true ) {
-    
-                velocity.y = Math.max( 0, velocity.y );
-                canJump = true;
-    
-            }
-    
-            controls.moveRight( - velocity.x * delta );
-            controls.moveForward( - velocity.z * delta );
-    
-            controls.getObject().position.y += ( velocity.y * delta ); // new behavior
-    
-            if ( controls.getObject().position.y < 10 ) {
-    
-                velocity.y = 0;
-                controls.getObject().position.y = 10;
-    
-                canJump = true;
-    
-            }
-    
+    requestAnimationFrame( animate );
+
+    const time = performance.now();
+
+    if ( controls.isLocked === true ) {
+
+        raycaster.ray.origin.copy( controls.getObject().position );
+        raycaster.ray.origin.y -= 10;
+
+        const intersections = raycaster.intersectObjects( objects, false );
+
+        const onObject = intersections.length > 0;
+
+        const delta = ( time - prevTime ) / 1000;
+
+        velocity.x -= velocity.x * 10.0 * delta;
+        velocity.z -= velocity.z * 10.0 * delta;
+
+        velocity.y -= 6* 100.0 * delta; // 100.0 = mass
+
+        direction.z = Number( moveForward ) - Number( moveBackward );
+        direction.x = Number( moveRight ) - Number( moveLeft );
+        direction.normalize(); // this ensures consistent movements in all directions
+
+        if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
+        if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
+
+        if ( onObject === true ) {
+
+            velocity.y = Math.max( 0, velocity.y );
+            canJump = true;
+
         }
-    
-        prevTime = time;
-    
-        renderer.render( scene, camera );
-    
+
+        controls.moveRight( - velocity.x * delta );
+        controls.moveForward( - velocity.z * delta );
+
+        controls.getObject().position.y += ( velocity.y * delta ); // new behavior
+
+        if ( controls.getObject().position.y < 10 ) {
+
+            velocity.y = 0;
+            controls.getObject().position.y = 10;
+
+            canJump = true;
+
+        }
+
     }
+
+    prevTime = time;
+
+    renderer.render( scene, camera );
+
+}
     
     
