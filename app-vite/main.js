@@ -21,7 +21,7 @@ function init() {
     document.body.appendChild(renderer.domElement)
     renderer.setPixelRatio(devicePixelRatio)
 
-    const plane_geometry = new THREE.PlaneGeometry(500, 500);
+    const plane_geometry = new THREE.PlaneGeometry(55, 55);
     const plane_material = new THREE.MeshStandardMaterial(0xff0000);
     const plane = new THREE.Mesh(plane_geometry, plane_material);
     plane.receiveShadow = true;
@@ -36,7 +36,7 @@ function init() {
     const texturenormal = textureloader.load('img/Concrete_Blocks_011_normal.jpg')
     const textureroughness = textureloader.load('img/Concrete_Blocks_011_roughness.jpg')
 
-    const cube_geometry = new THREE.BoxGeometry(20, 20, 20, 512, 512)
+    const cube_geometry = new THREE.BoxGeometry(5, 5, 5, 512/2, 512/2)
     const cube_material = new THREE.MeshStandardMaterial(
         {
             map: textureBasecolor,
@@ -51,9 +51,9 @@ function init() {
     for ( let i = 0; i < 20; i ++ ) {
 
         const cube = new THREE.Mesh( cube_geometry, cube_material );
-        cube.position.x = Math.floor( Math.random() * 10 - 5 ) * 20;
-        cube.position.y = Math.floor( Math.random() * 4 ) * 20 + 10;
-        cube.position.z = Math.floor( Math.random() * 10 - 5 ) * 20;
+        cube.position.x = Math.floor( Math.random() * 10 - 5 ) * 5;
+        cube.position.y = Math.floor( Math.random() * 4 ) * 5 + 2.5;
+        cube.position.z = Math.floor( Math.random() * 10 - 5 ) * 5;
         cube.castShadow = true;
         cube.receiveShadow = true;
 
@@ -70,11 +70,14 @@ function init() {
     const ambientLight = new THREE.AmbientLight( 0xcccccc );
     scene.add( ambientLight );
 
-    const light = new THREE.DirectionalLight(0xffffff, 1, 100)
-    light.position.set(1, 1, 1);
+    const light = new THREE.DirectionalLight(0xffffff, 1, 100);
+    light.position.set(20, 20, 10);
     light.castShadow = true;
-    light.shadowMapWidth = 1024; // default is 512
-    light.shadowMapHeight = 1024; // default is 512
+    light.shadowMapWidth = 512*8; // default is 512
+    light.shadowMapHeight = 512*8; // default is 512
+    light.shadow.camera = new THREE.OrthographicCamera( -100, 100, 100, -100, 0.5, 1000 );
+    light.shadow.radius = 4;
+    light.target = plane;
     scene.add(light);
 
     const controls = new OrbitControls(camera, renderer.domElement);
