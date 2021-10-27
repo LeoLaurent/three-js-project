@@ -1,17 +1,31 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls';
+let camera, scene, renderer, controls;
 
-let scene, renderer, camera;
+const objects = [];
+
+let raycaster;
+
+let moveForward = false;
+let moveBackward = false;
+let moveLeft = false;
+let moveRight = false;
+let canJump = false;
+
+let prevTime = performance.now();
+const velocity = new THREE.Vector3();
+const direction = new THREE.Vector3();
+const vertex = new THREE.Vector3();
+const color = new THREE.Color();
 
 init();
-rend();
+animate();
 
 function init() {
     scene = new THREE.Scene();
 
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, -2.5, 2.5);
-    camera.lookAt(0, 0, 0);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+    camera.position.y = 10
 
     renderer = new THREE.WebGLRenderer({antialias: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -19,10 +33,11 @@ function init() {
     document.body.appendChild(renderer.domElement)
     renderer.setPixelRatio(devicePixelRatio)
 
-    const plane_geometry = new THREE.PlaneGeometry(5, 5);
+    const plane_geometry = new THREE.PlaneGeometry(2000, 2000, 100, 100);
     const plane_material = new THREE.MeshStandardMaterial(0xff0000);
     const plane = new THREE.Mesh(plane_geometry, plane_material);
-    plane.receiveShadow = true
+    plane.receiveShadow = true;
+    plane.rotateX( - Math.PI / 2 );
     scene.add(plane);
 
     const textureloader = new THREE.TextureLoader()
@@ -32,7 +47,7 @@ function init() {
     const texturenormal = textureloader.load('img/Concrete_Blocks_011_normal.jpg')
     const textureroughness = textureloader.load('img/Concrete_Blocks_011_roughness.jpg')
 
-    const cube_geometry = new THREE.BoxGeometry(1, 1, 1, 512, 512)
+    const cube_geometry = new THREE.BoxGeometry(5, 5, 5, 512, 512)
     const cube_material = new THREE.MeshStandardMaterial(
         {
             map: textureBasecolor,
@@ -48,20 +63,152 @@ function init() {
     cube.position.set(0, 0, 1);
     cube.castShadow = true;
     scene.add(cube);
+    controls = new PointerLockControls( camera ,  document.body );
 
+    document.body.addEventListener( 'click', function () {
+    
+        controls.lock();
+    }, false );
+
+    scene.add( controls.getObject() );
     const light = new THREE.DirectionalLight(0xffffff, 1, 100)
-    light.position.set(-2, -2, 5);
+    light.position.set(0 , 2, 5);
     light.castShadow = true;
-    light.shadowMapWidth = 1024; // default is 512
-    light.shadowMapHeight = 1024; // default is 512
+    light.shadowMapWidth = 1024; 
+    light.shadowMapHeight = 1024; 
     scene.add(light);
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 1, 0);
-    controls.update();
+    // Definition des controles
+    const onKeyDown = function ( event ) {
+
+        switch ( event.code ) {
+
+            case 'ArrowUp':
+            case 'KeyW':
+                moveForward = true;
+                break;
+
+            case 'ArrowLeft':
+            case 'KeyA':
+                moveLeft = true;
+                break;
+
+            case 'ArrowDown':
+            case 'KeyS':
+                moveBackward = true;
+                break;
+
+            case 'ArrowRight':
+            case 'KeyD':
+                moveRight = true;
+                break;
+
+            case 'Space':
+                if ( canJump === true ) velocity.y +=250;
+                canJump = false;
+                break;
+
+        }
+    };
+
+    const onKeyUp = function ( event ) {
+        switch ( event.code ) {
+
+            case 'ArrowUp':
+            case 'KeyW':
+                moveForward = false;
+                break;
+
+            case 'ArrowLeft':
+            case 'KeyA':
+                moveLeft = false;
+                break;
+
+            case 'ArrowDown':
+            case 'KeyS':
+                moveBackward = false;
+                break;
+
+            case 'ArrowRight':
+            case 'KeyD':
+                moveRight = false;
+                break;
+
+        }
+    };
+    document.addEventListener( 'keydown', onKeyDown );
+    document.addEventListener( 'keyup', onKeyUp );
+
+    raycaster = new THREE.Raycaster( new THREE.Vector3(), new THREE.Vector3( 0, - 1, 0 ), 0, 10 );
+    window.addEventListener( 'resize', onWindowResize );    
+};
+    
+function onWindowResize() {
+
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    renderer.setSize( window.innerWidth, window.innerHeight );
+
 }
 
-function rend(){
-    renderer.render(scene,camera);
-    requestAnimationFrame(rend)
-}
+
+    function animate() {
+
+        requestAnimationFrame( animate );
+    
+        const time = performance.now();
+    
+        if ( controls.isLocked === true ) {
+    
+            raycaster.ray.origin.copy( controls.getObject().position );
+            raycaster.ray.origin.y -= 10;
+    
+            const intersections = raycaster.intersectObjects( objects, false );
+    
+            const onObject = intersections.length > 0;
+    
+            const delta = ( time - prevTime ) / 1000;
+    
+            velocity.x -= velocity.x * 2.0 * delta;
+            velocity.z -= velocity.z * 2.0 * delta;
+    
+            velocity.y -= 9.8 * 70.0 * delta; // 100.0 = mass
+    
+            direction.z = Number( moveForward ) - Number( moveBackward );
+            direction.x = Number( moveRight ) - Number( moveLeft );
+            direction.normalize(); // this ensures consistent movements in all directions
+    
+            if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
+            if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
+    
+            if ( onObject === true ) {
+    
+                velocity.y = Math.max( 0, velocity.y );
+                canJump = true;
+    
+            }
+    
+            controls.moveRight( - velocity.x * delta );
+            controls.moveForward( - velocity.z * delta );
+    
+            controls.getObject().position.y += ( velocity.y * delta ); // new behavior
+    
+            if ( controls.getObject().position.y < 10 ) {
+    
+                velocity.y = 0;
+                controls.getObject().position.y = 10;
+    
+                canJump = true;
+    
+            }
+    
+        }
+    
+        prevTime = time;
+    
+        renderer.render( scene, camera );
+    
+    }
+    
+    
