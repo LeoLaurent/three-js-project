@@ -68,7 +68,6 @@ function init() {
             aoMap: textureAmbientOcclussionWood
         }
     );
-    plane_material.map
     const plane = new THREE.Mesh(plane_geometry, plane_material);
     plane.receiveShadow = true;
     plane.rotateX( - Math.PI / 2 );
